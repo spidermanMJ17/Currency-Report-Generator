@@ -15,24 +15,23 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             padding: 20px;
         }
         
-        .container {
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
             background: white;
             border-radius: 20px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            padding: 40px;
-            max-width: 600px;
-            width: 100%;
+            overflow: hidden;
+            min-height: 80vh;
         }
         
         .header {
             text-align: center;
-            margin-bottom: 30px;
+            padding: 40px 20px 20px;
+            background: linear-gradient(135deg, #f8f9ff 0%, #e8ecff 100%);
         }
         
         .header h1 {
@@ -48,6 +47,29 @@
         .header p {
             color: #666;
             font-size: 1.1em;
+        }
+        
+        .content-wrapper {
+            display: flex;
+            min-height: 600px;
+        }
+        
+        .left-panel {
+            flex: 1;
+            padding: 40px;
+            background: white;
+            border-right: 1px solid #e1e1e1;
+        }
+        
+        .right-panel {
+            flex: 1;
+            padding: 40px;
+            background: #f8f9ff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
         }
         
         .form-group {
@@ -110,10 +132,38 @@
             transform: none;
         }
         
+        .generate-section {
+            width: 100%;
+            max-width: 300px;
+            text-align: center;
+        }
+        
+        .placeholder-state {
+            text-align: center;
+            color: #999;
+        }
+        
+        .placeholder-state .icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+        
+        .placeholder-state h3 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            color: #666;
+        }
+        
+        .placeholder-state p {
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+        
         .loading {
             display: none;
             text-align: center;
-            margin: 20px 0;
+            color: #667eea;
         }
         
         .spinner {
@@ -123,7 +173,7 @@
             width: 50px;
             height: 50px;
             animation: spin 1s linear infinite;
-            margin: 0 auto 10px;
+            margin: 0 auto 20px;
         }
         
         @keyframes spin {
@@ -132,104 +182,203 @@
         }
         
         .result {
-            margin-top: 30px;
-            padding: 20px;
-            background: #f8f9ff;
-            border-radius: 10px;
-            border-left: 5px solid #667eea;
             display: none;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
         }
         
-        .result h3 {
+        .result-header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e1e1e1;
+        }
+        
+        .result-header h3 {
             color: #333;
-            margin-bottom: 15px;
+            font-size: 1.5em;
+            margin-bottom: 5px;
         }
         
-        .result pre {
+        .result-header .report-info {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .result-content {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding-right: 10px;
+        }
+        
+        .result-content pre {
             white-space: pre-wrap;
             line-height: 1.6;
             color: #555;
-            max-height: 400px;
-            overflow-y: auto;
+            font-size: 14px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #e1e1e1;
+            margin: 0;
         }
         
-        .error {
-            background: #ffebee;
-            border-left-color: #f44336;
-            color: #c62828;
-        }
-        
-        .download-section {
-            margin-top: 20px;
+        .result-actions {
             text-align: center;
+            padding-top: 15px;
+            border-top: 2px solid #e1e1e1;
         }
         
         .btn-download {
             background: linear-gradient(45deg, #28a745, #20c997);
-            margin-top: 10px;
+            max-width: 250px;
         }
         
         .btn-download:hover {
             box-shadow: 0 10px 20px rgba(40, 167, 69, 0.3);
         }
         
+        .error {
+            background: #ffebee;
+            border-left: 5px solid #f44336;
+            color: #c62828;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                flex-direction: column;
+            }
+            
+            .left-panel {
+                border-right: none;
+                border-bottom: 1px solid #e1e1e1;
+            }
+            
+            .right-panel {
+                min-height: 400px;
+            }
+        }
+        
         @media (max-width: 768px) {
-            .container {
-                padding: 30px 20px;
+            .main-container {
                 margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .header {
+                padding: 30px 20px 15px;
             }
             
             .header h1 {
                 font-size: 2em;
             }
+            
+            .left-panel,
+            .right-panel {
+                padding: 30px 20px;
+            }
+            
+            .generate-section {
+                max-width: 100%;
+            }
+        }
+        
+        /* Custom scrollbar for result content */
+        .result-content::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .result-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        .result-content::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+        
+        .result-content::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
         }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="main-container">
         <div class="header">
             <h1>📊 Currency Report Generator</h1>
             <p>Generate comprehensive currency analysis reports powered by AI</p>
         </div>
         
-        <form id="reportForm">
-            <div class="form-group">
-                <label for="currency">Select Currency Pair:</label>
-                <select id="currency" name="currency" required>
-                    <option value="">Choose a currency pair...</option>
-                    {% for curr in currencies %}
-                    <option value="{{ curr }}">{{ curr }}</option>
-                    {% endfor %}
-                </select>
+        <div class="content-wrapper">
+            <!-- Left Panel - Form -->
+            <div class="left-panel">
+                <form id="reportForm">
+                    <div class="form-group">
+                        <label for="currency">Select Currency Pair:</label>
+                        <select id="currency" name="currency" required>
+                            <option value="">Choose a currency pair...</option>
+                            {% for curr in currencies %}
+                            <option value="{{ curr }}">{{ curr }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="start_date">Start Date:</label>
+                        <input type="date" id="start_date" name="start_date" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="end_date">End Date:</label>
+                        <input type="date" id="end_date" name="end_date" required>
+                    </div>
+                </form>
             </div>
             
-            <div class="form-group">
-                <label for="start_date">Start Date:</label>
-                <input type="date" id="start_date" name="start_date" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="end_date">End Date:</label>
-                <input type="date" id="end_date" name="end_date" required>
-            </div>
-            
-            <button type="submit" class="btn" id="generateBtn">
-                Generate Report
-            </button>
-        </form>
-        
-        <div class="loading" id="loading">
-            <div class="spinner"></div>
-            <p>Generating your currency report... This may take a few moments.</p>
-        </div>
-        
-        <div class="result" id="result">
-            <h3>Generated Report</h3>
-            <pre id="reportContent"></pre>
-            <div class="download-section">
-                <button type="button" class="btn btn-download" id="downloadBtn" style="display: none;">
-                    📄 Download PDF Report
-                </button>
+            <!-- Right Panel - Results -->
+            <div class="right-panel">
+                <!-- Placeholder State -->
+                <div class="placeholder-state" id="placeholderState">
+                    <div class="icon">📈</div>
+                    <h3>Ready to Generate</h3>
+                    <p>Fill in the details on the left and click the button below to generate your comprehensive currency analysis report.</p>
+                </div>
+                
+                <!-- Generate Button Section -->
+                <div class="generate-section">
+                    <button type="submit" class="btn" id="generateBtn" form="reportForm">
+                        Generate Report
+                    </button>
+                </div>
+                
+                <!-- Loading State -->
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p><strong>Generating your currency report...</strong></p>
+                    <p>This may take a few moments while our AI analyzes the market data.</p>
+                </div>
+                
+                <!-- Results -->
+                <div class="result" id="result">
+                    <div class="result-header">
+                        <h3>Generated Report</h3>
+                        <div class="report-info" id="reportInfo"></div>
+                    </div>
+                    <div class="result-content">
+                        <pre id="reportContent"></pre>
+                    </div>
+                    <div class="result-actions">
+                        <button type="button" class="btn btn-download" id="downloadBtn">
+                            📄 Download PDF Report
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -244,14 +393,15 @@
             const generateBtn = document.getElementById('generateBtn');
             const loading = document.getElementById('loading');
             const result = document.getElementById('result');
-            const downloadBtn = document.getElementById('downloadBtn');
+            const placeholderState = document.getElementById('placeholderState');
+            const reportInfo = document.getElementById('reportInfo');
             
             // Show loading state
             generateBtn.disabled = true;
             generateBtn.textContent = 'Generating...';
+            placeholderState.style.display = 'none';
             loading.style.display = 'block';
             result.style.display = 'none';
-            downloadBtn.style.display = 'none';
             
             try {
                 const response = await fetch('/generate_report', {
@@ -265,24 +415,26 @@
                     // Store report data for PDF generation
                     currentReportData = data;
                     
+                    // Update report info
+                    reportInfo.textContent = `${data.currency} | ${data.start_date} to ${data.end_date}`;
+                    
                     // Show success result
                     document.getElementById('reportContent').textContent = data.report;
                     result.className = 'result';
-                    result.style.display = 'block';
-                    downloadBtn.style.display = 'inline-block';
+                    result.style.display = 'flex';
                 } else {
                     // Show error
                     document.getElementById('reportContent').textContent = data.error || 'An error occurred';
-                    result.className = 'result error';
-                    result.style.display = 'block';
-                    downloadBtn.style.display = 'none';
+                    result.className = 'result';
+                    document.getElementById('reportContent').className = 'error';
+                    result.style.display = 'flex';
                 }
             } catch (error) {
                 // Show network error
                 document.getElementById('reportContent').textContent = 'Network error: ' + error.message;
-                result.className = 'result error';
-                result.style.display = 'block';
-                downloadBtn.style.display = 'none';
+                result.className = 'result';
+                document.getElementById('reportContent').className = 'error';
+                result.style.display = 'flex';
             } finally {
                 // Reset button state
                 generateBtn.disabled = false;
