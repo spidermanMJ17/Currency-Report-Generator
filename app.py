@@ -131,6 +131,39 @@ def generate_report():
 
         Please provide specific data points, percentages, and actionable insights where possible. 
         Make the report professional, informative, and suitable for both beginner and advanced traders.
+
+        generate exact replica of below example
+
+        example:USDINR 
+        In the month of May 2025, the Indian rupee experienced a sharp shift in momentum, beginning the 
+        month on a strong note before weakening significantly. On May 2, the rupee surged to a seven-month 
+        high of 83.76/USD, driven by robust foreign inflows into Indian equities, falling global oil prices, and 
+        strength in other Asian currencies amid optimism around potential U.S. trade policy shifts. India's solid 
+        macroeconomic backdrop—including stronger-than-expected Q4 GDP growth of 7.4% and a record 
+        ₹2.7 lakh crore dividend transfer from the RBI—further bolstered investor sentiment. However, this 
+        positive trend reversed sharply from May 3 onward as dollar demand surged, partly due to RBI’s efforts 
+        to replenish forex reserves and increased hedging activity by importers and corporates. The rupee 
+        depreciated to nearly 85.90 by May 9, also pressured by geopolitical tensions and global risk aversion. 
+        The depreciation continued into mid-May, driven by the U.S.-China 90-day tariff truce, which 
+        supported the dollar, and rising uncertainty over the Fed’s policy stance. 
+        Looking ahead although India's disinflation trend, with CPI easing to 3.16%, gave the RBI room to cut 
+        rates, rupee showing signs of stability supported by lower global oil prices, expected foreign inflows & 
+        expectations of the Fed holding rates steady kept the USD strong. While the Reserve Bank of India is 
+        likely to manage volatility through interventions and maintain a growth-supportive policy stance, dollar demand from corporates and global uncertainties could limit rupee appreciation. Overall, the bias 
+        remains sideways with a slight bullish tilt for INR if external conditions remain favorable.  Key Technical Indications: 
+        USD/INR has formed an inverse head and shoulders pattern, a bullish reversal setup, with the neckline 
+        recently being tested around 85.90–86.00. The breakout above the neckline signals a shift in market 
+        sentiment from bearish to bullish. If sustained, this breakout may lead to further upside, potentially 
+        targeting previous swing highs near 86.70–87.00.  
+        ▪ MACD (Moving Average Convergence Divergence): The MACD line has crossed above the 
+        signal line and is moving upward, with green histogram bars expanding. This crossover 
+        confirms bullish momentum and supports the breakout's strength. 
+        ▪ 200-day EMA: The price has reclaimed the EMA (Blue Line), which is now acting as dynamic 
+        support around 85.25. Sustained trading above this level reinforces the bullish bias and 
+        confirms the trend reversal. 
+        USD/INR shows a bullish reversal confirmed by the inverse head and shoulders breakout and a 
+        supportive MACD crossover. As long as the price remains above the 200 EMA and neckline, the 
+        outlook remains positive.
         
         Currency Pair: {currency}
         Analysis Period: {start_date} to {end_date}
