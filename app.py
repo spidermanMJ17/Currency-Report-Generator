@@ -94,46 +94,58 @@ def generate_report():
         prompt = f"""
         You are a professional financial analyst. Generate a comprehensive currency analysis report for {currency} covering the period from {start_date} to {end_date}.
 
-        Please include the following sections in your report:
+        The goal is to output a **clean, well-formatted currency performance summary**, including price movement, news highlights, macroeconomic calendar events, and technical indicators. Follow the instructions step-by-step and output in the exact structure described.
 
-        1. EXECUTIVE SUMMARY
-        - Brief overview of the currency pair's performance during this period
-        - Key highlights and major trends
+        [SECTION 1: Report Header]
+        Output this first:
+        Month and Year of end_date
+        Comprehensive Currency Report
 
-        2. MARKET ANALYSIS
-        - Price movements and volatility analysis
-        - Major support and resistance levels
-        - Trading volume patterns (if applicable)
+        [SECTION 2: Market Performance]
+        In 3–4 sentences, summarize the overall economic and financial conditions that affected the currency pair during the time period.
+        - Mention interest rate decisions, inflation reports, central bank tone, geopolitical tensions, or global events that had an impact.
+        - Summarize the tone (e.g., hawkish/dovish), market reaction, and notable shifts.
 
-        3. FUNDAMENTAL FACTORS
-        - Economic indicators that influenced the currency pair
-        - Central bank policies and interest rate changes
-        - Political and economic events that impacted the currencies
+        [SECTION 3: Market Last Month]
+        Present a 1-row table showing the price movement:
 
-        4. TECHNICAL ANALYSIS
-        - Trend analysis (bullish, bearish, or sideways)
-        - Key technical indicators and patterns
-        - Chart patterns observed during the period
+        Date           start_date     end_date     % Change  
+        currency_pair     starting_price     ending_price     percent_change
 
-        5. MARKET SENTIMENT
-        - Overall market sentiment towards both currencies
-        - Risk appetite and safe-haven flows
-        - Institutional vs retail positioning
+        Note:
+        - Get prices from Reuters (https://www.reuters.com/markets/currencies/)
+        - If date is a holiday/weekend, use the nearest available previous trading day.
+        - Calculate % change as ((end - start) / start) * 100, rounded to 2 decimal places.
 
-        6. FUTURE OUTLOOK
-        - Short-term price projections
-        - Key levels to watch
-        - Potential catalysts for future movements
+        [SECTION 4: Currency Movement Summary]
+        Write a 3–5 sentence summary explaining how the currency pair moved during the month.
+        Include:
+        - Key dates and events (e.g., “On Jun 5, Fed held rates steady...”, “On Jun 12, CPI data surprised markets...”)
+        - Include any major news items or releases that caused volatility or trend shifts.
+        - Cite actual vs forecast values for major indicators if available (e.g., “Core CPI y/y came in at 2.3% vs 2.4% forecast”).
+        - Use data from Reuters and economic calendar from https://www.forexfactory.com/calendar.
 
-        7. RISK FACTORS
-        - Potential risks and challenges
-        - Scenarios that could impact the currency pair
+        [SECTION 5: Key Technical Indications]
+        Write 2–3 bullet points describing the technical chart setup and indicators for this currency pair:
+        • Mention any visible patterns (e.g., triangle, head-and-shoulders, channel) and their breakout levels (with price levels).
+        • Describe indicator readings such as RSI, MACD, EMA (e.g., “RSI at 62, indicating bullish momentum”), and what they suggest.
+        • Suggest trend direction if supported by technicals.
 
-        Please provide specific data points, percentages, and actionable insights where possible. 
-        Make the report professional, informative, and suitable for both beginner and advanced traders.
+        [SECTION 6: Expected Range and Key Levels]
+        Conclude with expected range and support/resistance:
+        Month      Expected Range       Key Levels  
+        Month name of end_date   lower_bound–upper_bound     Support at support_level ; Resistance at resistance_level
 
-        generate exact replica of below example
+        - Choose levels based on current volatility, recent highs/lows, and event risks.
+        -    All values must reflect realistic price zones (2 decimal places).
 
+        [IMPORTANT RULES]
+        - Be concise, factual, and data-driven.
+        - Use a structured layout: use sections and formatting as described.
+        - No extra commentary, no casual tone—this is a financial report.
+        - Do not skip any section.
+
+        here is the example if need to go through
         example:USDINR 
         In the month of May 2025, the Indian rupee experienced a sharp shift in momentum, beginning the 
         month on a strong note before weakening significantly. On May 2, the rupee surged to a seven-month 
