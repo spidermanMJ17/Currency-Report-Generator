@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Currency Report Generator</title>
+    <style>
+        /* Basic styling for the page */
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        input[type="date"], select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            background-color: #0056b3;
+        }
+        
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .download-btn {
+            background-color: #28a745;
+        }
+        
+        .download-btn:hover {
+            background-color: #218838;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .report-container {
+            display: none;
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .report-text {
+            white-space: pre-wrap;
+            line-height: 1.6;
+            font-size: 14px;
+            color: #333;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 15px;
+            background-color: white;
+            border-radius: 4px;
+        }
+        
+        .report-header {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #007bff;
+        }
+        
+        .report-header h3 {
+            margin: 0;
+            color: #007bff;
+        }
+        
+        .report-meta {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Currency Report Generator</h1>
+        
+        <!-- Main form for generating reports -->
+        <form id="reportForm">
+            <div class="form-group">
+                <label for="startDate">Start Date:</label>
+                <input type="date" id="startDate" name="start_date" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="endDate">End Date:</label>
+                <input type="date" id="endDate" name="end_date" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="currency">Currency Pair:</label>
+                <select id="currency" name="currency" required>
+                    <option value="">Select a currency pair</option>
+                    {% for curr in currencies %}
+                    <option value="{{ curr }}">{{ curr }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <button type="submit" id="generateBtn">Generate Report</button>
+        </form>
+        
+        <!-- Loading spinner -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Generating report... Please wait.</p>
+        </div>
+        
+        <!-- Error message container -->
+        <div id="errorContainer"></div>
+        
+        <!-- Report display container -->
+        <div class="report-container" id="reportContainer">
+            <div class="report-header">
+                <h3>Currency Report</h3>
+                <div class="report-meta" id="reportMeta"></div>
+            </div>
+            <div class="report-text" id="reportText"></div>
+            <button type="button" class="download-btn" id="downloadBtn">Download PDF</button>
+        </div>
+    </div>
+
+    <script>
+        // Store the current report data for PDF generation
+        let currentReportData = null;
+        
+        // Get form elements
+        const form = document.getElementById('reportForm');
+        const generateBtn = document.getElementById('generateBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const loading = document.getElementById('loading');
+        const errorContainer = document.getElementById('errorContainer');
+        const reportContainer = document.getElementById('reportContainer');
+        const reportText = document.getElementById('reportText');
+        const reportMeta = document.getElementById('reportMeta');
+        
+        // Handle form submission
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Clear previous errors and reports
+            errorContainer.innerHTML = '';
+            reportContainer.style.display = 'none';
+            
+            // Show loading spinner
+            loading.style.display = 'block';
+            generateBtn.disabled = true;
+            
+            // Get form data
+            const formData = new FormData(form);
+            
+            try {
+                // Send request to Flask backend
+                const response = await fetch('/generate_report', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Display the report
+                    reportText.textContent = data.report;
+                    reportMeta.textContent = `${data.currency} | ${data.start_date} to ${data.end_date}`;
+                    reportContainer.style.display = 'block';
+                    
+                    // Store report data for PDF generation
+                    currentReportData = data;
+                } else {
+                    // Show error message
+                    showError(data.error || 'An error occurred while generating the report.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Failed to connect to the server. Please try again.');
+            } finally {
+                // Hide loading spinner and re-enable button
+                loading.style.display = 'none';
+                generateBtn.disabled = false;
+            }
+        });
+        
+        // Handle PDF download
+        downloadBtn.addEventListener('click', async function() {
+            if (!currentReportData) {
+                showError('No report data available for download.');
+                return;
+            }
+            
+            downloadBtn.disabled = true;
+            downloadBtn.textContent = 'Generating PDF...';
+            
+            try {
+                // Send report data to backend for PDF generation
+                const response = await fetch('/download_pdf', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(currentReportData)
+                });
+                
+                if (response.ok) {
+                    // Create download link for the PDF
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `currency_report_${currentReportData.currency}_${currentReportData.start_date}_to_${currentReportData.end_date}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                } else {
+                    const errorData = await response.json();
+                    showError(errorData.error || 'Failed to generate PDF.');
+                }
+            } catch (error) {
+                console.error('PDF Error:', error);
+                showError('Failed to download PDF. Please try again.');
+            } finally {
+                downloadBtn.disabled = false;
+                downloadBtn.textContent = 'Download PDF';
+            }
+        });
+        
+        // Function to display error messages
+        function showError(message) {
+            errorContainer.innerHTML = `<div class="error">${message}</div>`;
+        }
+        
+        // Set default dates (last 30 days)
+        window.addEventListener('load', function() {
+            const today = new Date();
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(today.getDate() - 30);
+            
+            document.getElementById('endDate').value = today.toISOString().split('T')[0];
+            document.getElementById('startDate').value = thirtyDaysAgo.toISOString().split('T')[0];
+        });
+    </script>
+</body>
+</html>
