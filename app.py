@@ -1,10 +1,11 @@
-# app.py - Main Flask application (Vercel optimized)
+# app.py - Main Flask application (Railway optimized)
 from flask import Flask, render_template, request, jsonify, send_file
 import google.generativeai as genai
 import os
 from datetime import datetime
 from fpdf import FPDF
 import io
+import tempfile
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -67,55 +68,44 @@ def generate_report():
         prompt = f"""
         You are a professional financial analyst. Generate a comprehensive currency analysis report for {currency} covering the period from {start_date} to {end_date}.
 
-               The report should include the following sections:
-        1. Overview: Summarize the currency pair’s performance over the month, including price
-        trends, appreciation or depreciation, and overall sentiment.
+        Please include the following sections in your report:
 
-        2. Technical Analysis: Describe key technical indicators such as support and resistance
-        levels, trend direction, RSI or MACD signals, and volatility.
+        1. EXECUTIVE SUMMARY
+        - Brief overview of the currency pair's performance during this period
+        - Key highlights and major trends
 
-        3. Key Events: Highlight important global or domestic economic events, central bank
-        decisions, inflation data, geopolitical events, or any policy changes that affected this
-        currency pair during the month.
+        2. MARKET ANALYSIS
+        - Price movements and volatility analysis
+        - Major support and resistance levels
+        - Trading volume patterns (if applicable)
 
-        4. Conclusion: Provide a summary of the pair’s overall behavior, key takeaways from the
-        month, and if applicable, an outlook or sentiment for the near future.
-        Write the report in plain text, formatted with headings for each section. Avoid HTML or
-        unnecessary symbols. Make sure the tone is suitable for a financial report.
+        3. FUNDAMENTAL FACTORS
+        - Economic indicators that influenced the currency pair
+        - Central bank policies and interest rate changes
+        - Political and economic events that impacted the currencies
 
-        try make same replication as below example:
+        4. TECHNICAL ANALYSIS
+        - Trend analysis (bullish, bearish, or sideways)
+        - Key technical indicators and patterns
+        - Chart patterns observed during the period
 
-        example:USDINR 
-        In the month of May 2025, the Indian rupee experienced a sharp shift in momentum, beginning the 
-        month on a strong note before weakening significantly. On May 2, the rupee surged to a seven-month 
-        high of 83.76/USD, driven by robust foreign inflows into Indian equities, falling global oil prices, and 
-        strength in other Asian currencies amid optimism around potential U.S. trade policy shifts. India's solid 
-        macroeconomic backdrop—including stronger-than-expected Q4 GDP growth of 7.4% and a record 
-        ₹2.7 lakh crore dividend transfer from the RBI—further bolstered investor sentiment. However, this 
-        positive trend reversed sharply from May 3 onward as dollar demand surged, partly due to RBI’s efforts 
-        to replenish forex reserves and increased hedging activity by importers and corporates. The rupee 
-        depreciated to nearly 85.90 by May 9, also pressured by geopolitical tensions and global risk aversion. 
-        The depreciation continued into mid-May, driven by the U.S.-China 90-day tariff truce, which 
-        supported the dollar, and rising uncertainty over the Fed’s policy stance. 
-        Looking ahead although India's disinflation trend, with CPI easing to 3.16%, gave the RBI room to cut 
-        rates, rupee showing signs of stability supported by lower global oil prices, expected foreign inflows & 
-        expectations of the Fed holding rates steady kept the USD strong. While the Reserve Bank of India is 
-        likely to manage volatility through interventions and maintain a growth-supportive policy stance, dollar demand from corporates and global uncertainties could limit rupee appreciation. Overall, the bias 
-        remains sideways with a slight bullish tilt for INR if external conditions remain favorable.  Key Technical Indications: 
-        USD/INR has formed an inverse head and shoulders pattern, a bullish reversal setup, with the neckline 
-        recently being tested around 85.90–86.00. The breakout above the neckline signals a shift in market 
-        sentiment from bearish to bullish. If sustained, this breakout may lead to further upside, potentially 
-        targeting previous swing highs near 86.70–87.00.  
-        ▪ MACD (Moving Average Convergence Divergence): The MACD line has crossed above the 
-        signal line and is moving upward, with green histogram bars expanding. This crossover 
-        confirms bullish momentum and supports the breakout's strength. 
-        ▪ 200-day EMA: The price has reclaimed the EMA (Blue Line), which is now acting as dynamic 
-        support around 85.25. Sustained trading above this level reinforces the bullish bias and 
-        confirms the trend reversal. 
-        USD/INR shows a bullish reversal confirmed by the inverse head and shoulders breakout and a 
-        supportive MACD crossover. As long as the price remains above the 200 EMA and neckline, the 
-        outlook remains positive. 
+        5. MARKET SENTIMENT
+        - Overall market sentiment towards both currencies
+        - Risk appetite and safe-haven flows
+        - Institutional vs retail positioning
 
+        6. FUTURE OUTLOOK
+        - Short-term price projections
+        - Key levels to watch
+        - Potential catalysts for future movements
+
+        7. RISK FACTORS
+        - Potential risks and challenges
+        - Scenarios that could impact the currency pair
+
+        Please provide specific data points, percentages, and actionable insights where possible. 
+        Make the report professional, informative, and suitable for both beginner and advanced traders.
+        
         Currency Pair: {currency}
         Analysis Period: {start_date} to {end_date}
         """
@@ -157,6 +147,7 @@ def generate_report():
 @app.route('/download_pdf', methods=['POST'])
 def download_pdf():
     """Convert report to PDF and download"""
+    tmp_file_path = None
     try:
         # Get the report data from the request
         data = request.get_json()
@@ -199,46 +190,48 @@ def download_pdf():
             else:
                 pdf.cell(0, 6, line, 0, 1)
         
-        # Create in-memory PDF buffer for Vercel (serverless friendly)
-        pdf_buffer = io.BytesIO()
-        pdf_string = pdf.output(dest='S')
-        
-        # Handle different fpdf versions
-        if isinstance(pdf_string, str):
-            pdf_string = pdf_string.encode('latin-1')
-        
-        pdf_buffer.write(pdf_string)
-        pdf_buffer.seek(0)
+        # Save PDF to temporary file
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
+            pdf.output(tmp_file.name)
+            tmp_file_path = tmp_file.name
         
         # Generate filename
         filename = f"currency_report_{currency}_{start_date}_to_{end_date}.pdf"
         
-        return send_file(
-            pdf_buffer,
+        def cleanup_file():
+            try:
+                if tmp_file_path and os.path.exists(tmp_file_path):
+                    os.unlink(tmp_file_path)
+            except:
+                pass
+        
+        response = send_file(
+            tmp_file_path,
             as_attachment=True,
             download_name=filename,
             mimetype='application/pdf'
         )
         
+        # Schedule cleanup after response
+        response.call_on_close(cleanup_file)
+        
+        return response
+        
     except Exception as e:
+        # Clean up temp file on error
+        if tmp_file_path and os.path.exists(tmp_file_path):
+            try:
+                os.unlink(tmp_file_path)
+            except:
+                pass
         return jsonify({'error': f'Error generating PDF: {str(e)}'}), 500
 
-# Health check endpoint for Vercel
+# Health check endpoint
 @app.route('/health')
 def health_check():
     """Simple health check endpoint"""
     return jsonify({'status': 'healthy', 'message': 'Currency Report App is running'})
 
-# Error handlers for better debugging
-@app.errorhandler(404)
-def not_found(error):
-    return jsonify({'error': 'Endpoint not found'}), 404
-
-@app.errorhandler(500)
-def internal_error(error):
-    return jsonify({'error': 'Internal server error'}), 500
-
-# Main execution block - Vercel compatible
 if __name__ == '__main__':
     # Check if Gemini API key is set
     if not os.getenv('GEMINI_API_KEY'):
@@ -246,5 +239,6 @@ if __name__ == '__main__':
         print("Please set your Google Gemini API key before running the app.")
         print("Get your API key from: https://makersuite.google.com/app/apikey")
     
-    # Run the Flask app - Vercel handles port and host automatically
-    app.run(debug=False)
+    # Run the Flask app - Railway compatible
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
