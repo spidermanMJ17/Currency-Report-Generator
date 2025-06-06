@@ -1,4 +1,4 @@
-# app.py - Main Flask application (Railway optimized)
+# app.py - Main Flask application (Render optimized)
 from flask import Flask, render_template, request, jsonify, send_file
 import google.generativeai as genai
 import os
@@ -6,12 +6,25 @@ from datetime import datetime
 from fpdf import FPDF
 import io
 import tempfile
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Initialize Flask app
 app = Flask(__name__)
 
 # Configure Google Gemini API key from environment variable
-genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
+try:
+    api_key = os.getenv('GEMINI_API_KEY')
+    if api_key:
+        genai.configure(api_key=api_key)
+        logger.info("Gemini API configured successfully")
+    else:
+        logger.warning("GEMINI_API_KEY not found in environment variables")
+except Exception as e:
+    logger.error(f"Error configuring Gemini API: {e}")
 
 # List of available currencies
 CURRENCIES = [
@@ -37,16 +50,29 @@ class PDF(FPDF):
 @app.route('/')
 def home():
     """Main page with the form"""
-    return render_template('index.html', currencies=CURRENCIES)
+    try:
+        return render_template('index.html', currencies=CURRENCIES)
+    except Exception as e:
+        logger.error(f"Error rendering home page: {e}")
+        return f"Error loading page: {str(e)}", 500
 
 @app.route('/generate_report', methods=['POST'])
 def generate_report():
     """Generate currency report using Gemini"""
     try:
+        logger.info("Generating report request received")
+        
+        # Check if API key is configured
+        if not os.getenv('GEMINI_API_KEY'):
+            logger.error("GEMINI_API_KEY not configured")
+            return jsonify({'error': 'Gemini API key is not configured'}), 500
+        
         # Get form data
         start_date = request.form.get('start_date')
         end_date = request.form.get('end_date')
         currency = request.form.get('currency')
+        
+        logger.info(f"Report request: {currency} from {start_date} to {end_date}")
         
         # Validate inputs
         if not all([start_date, end_date, currency]):
@@ -110,21 +136,37 @@ def generate_report():
         Analysis Period: {start_date} to {end_date}
         """
         
-        # Call Gemini API (try different model names)
+        # Call Gemini API with better error handling
         try:
+            logger.info("Calling Gemini API")
             model = genai.GenerativeModel('gemini-1.5-flash')
             response = model.generate_content(prompt)
-        except:
+            logger.info("Gemini API call successful")
+        except Exception as gemini_error:
+            logger.error(f"Gemini API error: {gemini_error}")
             try:
+                logger.info("Trying alternative model")
                 model = genai.GenerativeModel('gemini-1.5-pro')
                 response = model.generate_content(prompt)
-            except:
-                # Fallback to older model name
-                model = genai.GenerativeModel('models/gemini-pro')
-                response = model.generate_content(prompt)
+                logger.info("Alternative model successful")
+            except Exception as fallback_error:
+                logger.error(f"Fallback model error: {fallback_error}")
+                try:
+                    logger.info("Trying legacy model")
+                    model = genai.GenerativeModel('models/gemini-pro')
+                    response = model.generate_content(prompt)
+                    logger.info("Legacy model successful")
+                except Exception as legacy_error:
+                    logger.error(f"All models failed: {legacy_error}")
+                    return jsonify({'error': 'Unable to generate report. Please try again later.'}), 500
         
         # Extract the response text
-        report_text = response.text.strip()
+        if hasattr(response, 'text') and response.text:
+            report_text = response.text.strip()
+            logger.info("Report generated successfully")
+        else:
+            logger.error("Empty response from Gemini")
+            return jsonify({'error': 'Empty response from AI service'}), 500
         
         return jsonify({
             'success': True,
@@ -135,6 +177,7 @@ def generate_report():
         })
         
     except Exception as e:
+        logger.error(f"Unexpected error in generate_report: {str(e)}")
         # Handle various API errors
         error_message = str(e)
         if "API_KEY" in error_message.upper():
@@ -149,6 +192,8 @@ def download_pdf():
     """Convert report to PDF and download"""
     tmp_file_path = None
     try:
+        logger.info("PDF download request received")
+        
         # Get the report data from the request
         data = request.get_json()
         report_text = data.get('report', '')
@@ -183,9 +228,10 @@ def download_pdf():
                     if len(current_line + word) < 80:
                         current_line += word + ' '
                     else:
-                        pdf.cell(0, 6, current_line.strip(), 0, 1)
+                        if current_line.strip():
+                            pdf.cell(0, 6, current_line.strip(), 0, 1)
                         current_line = word + ' '
-                if current_line:
+                if current_line.strip():
                     pdf.cell(0, 6, current_line.strip(), 0, 1)
             else:
                 pdf.cell(0, 6, line, 0, 1)
@@ -198,12 +244,15 @@ def download_pdf():
         # Generate filename
         filename = f"currency_report_{currency}_{start_date}_to_{end_date}.pdf"
         
+        logger.info(f"PDF generated: {filename}")
+        
         def cleanup_file():
             try:
                 if tmp_file_path and os.path.exists(tmp_file_path):
                     os.unlink(tmp_file_path)
-            except:
-                pass
+                    logger.info("Temporary PDF file cleaned up")
+            except Exception as cleanup_error:
+                logger.error(f"Error cleaning up temp file: {cleanup_error}")
         
         response = send_file(
             tmp_file_path,
@@ -218,6 +267,7 @@ def download_pdf():
         return response
         
     except Exception as e:
+        logger.error(f"Error generating PDF: {str(e)}")
         # Clean up temp file on error
         if tmp_file_path and os.path.exists(tmp_file_path):
             try:
@@ -230,15 +280,31 @@ def download_pdf():
 @app.route('/health')
 def health_check():
     """Simple health check endpoint"""
-    return jsonify({'status': 'healthy', 'message': 'Currency Report App is running'})
+    return jsonify({
+        'status': 'healthy', 
+        'message': 'Currency Report App is running',
+        'gemini_configured': bool(os.getenv('GEMINI_API_KEY'))
+    })
+
+# Error handlers
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({'error': 'Not found'}), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    logger.error(f"Internal server error: {error}")
+    return jsonify({'error': 'Internal server error'}), 500
 
 if __name__ == '__main__':
     # Check if Gemini API key is set
     if not os.getenv('GEMINI_API_KEY'):
+        logger.warning("GEMINI_API_KEY environment variable is not set!")
         print("Warning: GEMINI_API_KEY environment variable is not set!")
         print("Please set your Google Gemini API key before running the app.")
         print("Get your API key from: https://makersuite.google.com/app/apikey")
     
-    # Run the Flask app - Railway compatible
+    # Run the Flask app - Render compatible
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    debug_mode = os.environ.get('FLASK_ENV') == 'development'
+    app.run(host='0.0.0.0', port=port, debug=debug_mode)

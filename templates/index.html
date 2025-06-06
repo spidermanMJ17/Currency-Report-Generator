@@ -5,75 +5,109 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Currency Report Generator</title>
     <style>
-        /* Basic styling for the page */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             padding: 20px;
-            background-color: #f5f5f5;
         }
         
         .container {
-            background-color: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
         }
         
-        h1 {
-            color: #333;
+        .header {
             text-align: center;
             margin-bottom: 30px;
         }
         
+        .header h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+        
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
         
-        label {
+        .form-group label {
             display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #555;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 1.1em;
         }
         
-        input[type="date"], select {
+        .form-group input,
+        .form-group select {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            padding: 15px;
+            border: 2px solid #e1e1e1;
+            border-radius: 10px;
             font-size: 16px;
-            box-sizing: border-box;
+            transition: all 0.3s ease;
+            background: #f8f9ff;
         }
         
-        button {
-            background-color: #007bff;
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
             color: white;
-            padding: 12px 30px;
             border: none;
-            border-radius: 4px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
             cursor: pointer;
-            font-size: 16px;
-            margin-right: 10px;
+            transition: all 0.3s ease;
             margin-top: 10px;
         }
         
-        button:hover {
-            background-color: #0056b3;
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
         }
         
-        button:disabled {
-            background-color: #ccc;
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
             cursor: not-allowed;
-        }
-        
-        .download-btn {
-            background-color: #28a745;
-        }
-        
-        .download-btn:hover {
-            background-color: #218838;
+            transform: none;
         }
         
         .loading {
@@ -84,12 +118,12 @@
         
         .spinner {
             border: 4px solid #f3f3f3;
-            border-top: 4px solid #3498db;
+            border-top: 4px solid #667eea;
             border-radius: 50%;
-            width: 30px;
-            height: 30px;
+            width: 50px;
+            height: 50px;
             animation: spin 1s linear infinite;
-            margin: 0 auto;
+            margin: 0 auto 10px;
         }
         
         @keyframes spin {
@@ -97,135 +131,129 @@
             100% { transform: rotate(360deg); }
         }
         
-        .error {
-            background-color: #f8d7da;
-            color: #721c24;
-            padding: 10px;
-            border-radius: 4px;
-            margin: 10px 0;
-            border: 1px solid #f5c6cb;
-        }
-        
-        .report-container {
-            display: none;
+        .result {
             margin-top: 30px;
             padding: 20px;
-            background-color: #f8f9fa;
-            border-radius: 4px;
-            border: 1px solid #dee2e6;
+            background: #f8f9ff;
+            border-radius: 10px;
+            border-left: 5px solid #667eea;
+            display: none;
         }
         
-        .report-text {
+        .result h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .result pre {
             white-space: pre-wrap;
             line-height: 1.6;
-            font-size: 14px;
-            color: #333;
+            color: #555;
             max-height: 400px;
             overflow-y: auto;
-            border: 1px solid #ddd;
-            padding: 15px;
-            background-color: white;
-            border-radius: 4px;
         }
         
-        .report-header {
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #007bff;
+        .error {
+            background: #ffebee;
+            border-left-color: #f44336;
+            color: #c62828;
         }
         
-        .report-header h3 {
-            margin: 0;
-            color: #007bff;
+        .download-section {
+            margin-top: 20px;
+            text-align: center;
         }
         
-        .report-meta {
-            font-size: 12px;
-            color: #666;
-            margin-top: 5px;
+        .btn-download {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            margin-top: 10px;
+        }
+        
+        .btn-download:hover {
+            box-shadow: 0 10px 20px rgba(40, 167, 69, 0.3);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px 20px;
+                margin: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Currency Report Generator</h1>
+        <div class="header">
+            <h1>📊 Currency Report Generator</h1>
+            <p>Generate comprehensive currency analysis reports powered by AI</p>
+        </div>
         
-        <!-- Main form for generating reports -->
         <form id="reportForm">
             <div class="form-group">
-                <label for="startDate">Start Date:</label>
-                <input type="date" id="startDate" name="start_date" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="endDate">End Date:</label>
-                <input type="date" id="endDate" name="end_date" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="currency">Currency Pair:</label>
+                <label for="currency">Select Currency Pair:</label>
                 <select id="currency" name="currency" required>
-                    <option value="">Select a currency pair</option>
+                    <option value="">Choose a currency pair...</option>
                     {% for curr in currencies %}
                     <option value="{{ curr }}">{{ curr }}</option>
                     {% endfor %}
                 </select>
             </div>
             
-            <button type="submit" id="generateBtn">Generate Report</button>
+            <div class="form-group">
+                <label for="start_date">Start Date:</label>
+                <input type="date" id="start_date" name="start_date" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="end_date">End Date:</label>
+                <input type="date" id="end_date" name="end_date" required>
+            </div>
+            
+            <button type="submit" class="btn" id="generateBtn">
+                Generate Report
+            </button>
         </form>
         
-        <!-- Loading spinner -->
         <div class="loading" id="loading">
             <div class="spinner"></div>
-            <p>Generating report... Please wait.</p>
+            <p>Generating your currency report... This may take a few moments.</p>
         </div>
         
-        <!-- Error message container -->
-        <div id="errorContainer"></div>
-        
-        <!-- Report display container -->
-        <div class="report-container" id="reportContainer">
-            <div class="report-header">
-                <h3>Currency Report</h3>
-                <div class="report-meta" id="reportMeta"></div>
+        <div class="result" id="result">
+            <h3>Generated Report</h3>
+            <pre id="reportContent"></pre>
+            <div class="download-section">
+                <button type="button" class="btn btn-download" id="downloadBtn" style="display: none;">
+                    📄 Download PDF Report
+                </button>
             </div>
-            <div class="report-text" id="reportText"></div>
-            <button type="button" class="download-btn" id="downloadBtn">Download PDF</button>
         </div>
     </div>
 
     <script>
-        // Store the current report data for PDF generation
         let currentReportData = null;
-        
-        // Get form elements
-        const form = document.getElementById('reportForm');
-        const generateBtn = document.getElementById('generateBtn');
-        const downloadBtn = document.getElementById('downloadBtn');
-        const loading = document.getElementById('loading');
-        const errorContainer = document.getElementById('errorContainer');
-        const reportContainer = document.getElementById('reportContainer');
-        const reportText = document.getElementById('reportText');
-        const reportMeta = document.getElementById('reportMeta');
-        
-        // Handle form submission
-        form.addEventListener('submit', async function(e) {
+
+        document.getElementById('reportForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            // Clear previous errors and reports
-            errorContainer.innerHTML = '';
-            reportContainer.style.display = 'none';
+            const formData = new FormData(this);
+            const generateBtn = document.getElementById('generateBtn');
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            const downloadBtn = document.getElementById('downloadBtn');
             
-            // Show loading spinner
-            loading.style.display = 'block';
+            // Show loading state
             generateBtn.disabled = true;
-            
-            // Get form data
-            const formData = new FormData(form);
+            generateBtn.textContent = 'Generating...';
+            loading.style.display = 'block';
+            result.style.display = 'none';
+            downloadBtn.style.display = 'none';
             
             try {
-                // Send request to Flask backend
                 const response = await fetch('/generate_report', {
                     method: 'POST',
                     body: formData
@@ -234,39 +262,45 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    // Display the report
-                    reportText.textContent = data.report;
-                    reportMeta.textContent = `${data.currency} | ${data.start_date} to ${data.end_date}`;
-                    reportContainer.style.display = 'block';
-                    
                     // Store report data for PDF generation
                     currentReportData = data;
+                    
+                    // Show success result
+                    document.getElementById('reportContent').textContent = data.report;
+                    result.className = 'result';
+                    result.style.display = 'block';
+                    downloadBtn.style.display = 'inline-block';
                 } else {
-                    // Show error message
-                    showError(data.error || 'An error occurred while generating the report.');
+                    // Show error
+                    document.getElementById('reportContent').textContent = data.error || 'An error occurred';
+                    result.className = 'result error';
+                    result.style.display = 'block';
+                    downloadBtn.style.display = 'none';
                 }
             } catch (error) {
-                console.error('Error:', error);
-                showError('Failed to connect to the server. Please try again.');
+                // Show network error
+                document.getElementById('reportContent').textContent = 'Network error: ' + error.message;
+                result.className = 'result error';
+                result.style.display = 'block';
+                downloadBtn.style.display = 'none';
             } finally {
-                // Hide loading spinner and re-enable button
-                loading.style.display = 'none';
+                // Reset button state
                 generateBtn.disabled = false;
+                generateBtn.textContent = 'Generate Report';
+                loading.style.display = 'none';
             }
         });
-        
-        // Handle PDF download
-        downloadBtn.addEventListener('click', async function() {
-            if (!currentReportData) {
-                showError('No report data available for download.');
-                return;
-            }
+
+        document.getElementById('downloadBtn').addEventListener('click', async function() {
+            if (!currentReportData) return;
+            
+            const downloadBtn = this;
+            const originalText = downloadBtn.textContent;
             
             downloadBtn.disabled = true;
-            downloadBtn.textContent = 'Generating PDF...';
+            downloadBtn.textContent = 'Preparing PDF...';
             
             try {
-                // Send report data to backend for PDF generation
                 const response = await fetch('/download_pdf', {
                     method: 'POST',
                     headers: {
@@ -276,7 +310,7 @@
                 });
                 
                 if (response.ok) {
-                    // Create download link for the PDF
+                    // Create blob and download
                     const blob = await response.blob();
                     const url = window.URL.createObjectURL(blob);
                     const a = document.createElement('a');
@@ -284,34 +318,27 @@
                     a.download = `currency_report_${currentReportData.currency}_${currentReportData.start_date}_to_${currentReportData.end_date}.pdf`;
                     document.body.appendChild(a);
                     a.click();
-                    window.URL.revokeObjectURL(url);
                     document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
                 } else {
                     const errorData = await response.json();
-                    showError(errorData.error || 'Failed to generate PDF.');
+                    alert('Error downloading PDF: ' + (errorData.error || 'Unknown error'));
                 }
             } catch (error) {
-                console.error('PDF Error:', error);
-                showError('Failed to download PDF. Please try again.');
+                alert('Network error while downloading PDF: ' + error.message);
             } finally {
                 downloadBtn.disabled = false;
-                downloadBtn.textContent = 'Download PDF';
+                downloadBtn.textContent = originalText;
             }
         });
-        
-        // Function to display error messages
-        function showError(message) {
-            errorContainer.innerHTML = `<div class="error">${message}</div>`;
-        }
-        
+
         // Set default dates (last 30 days)
         window.addEventListener('load', function() {
             const today = new Date();
-            const thirtyDaysAgo = new Date();
-            thirtyDaysAgo.setDate(today.getDate() - 30);
+            const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
             
-            document.getElementById('endDate').value = today.toISOString().split('T')[0];
-            document.getElementById('startDate').value = thirtyDaysAgo.toISOString().split('T')[0];
+            document.getElementById('end_date').value = today.toISOString().split('T')[0];
+            document.getElementById('start_date').value = thirtyDaysAgo.toISOString().split('T')[0];
         });
     </script>
 </body>
